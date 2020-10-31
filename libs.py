@@ -71,7 +71,7 @@ class Board:
                     if not self.checkIfBorder(x,y):
                         if Rect.func is not None:
                             for i,f in enumerate(Rect.func):
-                                Rect.func[i](currentRect=Rect, currentBoard=self)
+                                Rect.func[i](currentRect=Rect, currentBoard=self,pos_x=x,pos_y=y)
                     return
 
     def checkIfBorder(self, x, y):
