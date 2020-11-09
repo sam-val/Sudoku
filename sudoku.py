@@ -1,130 +1,96 @@
-import random
-import os
-import pygame as pg
-from libs import Board, MyRect, Display
+import copy
 
-class SodokuBoard(Board):
-        def draw(self):
-                self.draw_plain_init()
-                ### draw additional sodoku numbers:
-                for x in range(self.w):
-                        for y in range(self.h):
-                                n = grid[y][x]
-                                text = str(n) if n != 0 else ""
-                                rect = self.array[x+y*self.w].rect
-                                pos_x,pos_y = rect.left, rect.top
-                                display_ob.display_text(x=pos_x+rect.width//2,y=pos_y+rect.height//2,
-                                                        text=text,centeredX=True,centeredY=True,
-                                                        colour=WHITE,bg=BLACK,font=num_font)
-
-grid = [[5, 3, 0, 0, 7, 0, 0, 0, 0],
-        [6, 0, 0, 1, 9, 5, 0, 0, 0],
-        [0, 9, 8, 0, 0, 0, 0, 6, 0],
-        [8, 0, 0, 0, 6, 0, 0, 0, 3],
-        [4, 0, 0, 8, 0, 3, 0, 0, 1],
-        [7, 0, 0, 0, 2, 0, 0, 0, 6],
-        [0, 6, 0, 0, 0, 0, 2, 8, 0],
-        [0, 0, 0, 4, 1, 9, 0, 0, 5],
-        [0, 0, 0, 0, 8, 0, 0, 0, 0],
-        ]
-
-def assign_num(*args, **kwargs):
-    # current_rect = kwargs['currentRect']
-    x,y = kwargs['pos_x'], kwargs['pos_y']
-    num = grid[y][x]
-    # get the number input from user, to change......
-    while True:
-        try:
-            num = int(input("enter num: ")[0])
-        except ValueError:
-            continue
-        break
-
-    ## change the value in that position accordingly:
-    if num != grid[y][x]:
-        grid[y][x] = num
+def generate_empty_grid(width, height):
+    g = []
+    for y in range(height):
+        g.append([])
+        for x in range(width):
+            g[y].append(0)
+    return g
 
 
-def display_grid(grid):
-        pass
+def isPossbile(grid, n, x, y):
+    # check horozontally aka. x:
+    for i in range(0, 9):
+        if n == grid[y][i]:
+            if i != x:
+                return False
+    # check vertically:
+    for i in range(0, 9):
+        if n == grid[i][x]:
+            if i != y:
+                return False
+    # check the square:
+    x0 = (x // 3) * 3
+    y0 = (y // 3) * 3
+    for i in range(0, 3):
+        for j in range(0, 3):
+            if n == grid[y0 + i][x0 + j]:
+                if not (((y0 + i) == y) and ((x0 + j) == x)):
+                    return False
+    return True
 
 
 
-### CONSTANTS
-TITLE = "SODOKU"
-GRID_W = len(grid[0])
-GRID_H = len(grid)
-CUBE_WIDTH = 75
+class Solver:
+    def __init__(self, grid):
+        self.set_grid(grid)
 
-### COLOURS:
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 26, 0)
-BRIGHT_RED = (170,1,20)
-GREEN = (0, 128, 0)
-BLUE = (0, 0, 255)
-BEIGE = (250, 175, 0)
-AQUA = (128, 206, 207)
-DARK_GREY = (64, 64, 64)
-YELLOW = (255, 204, 0)
-PURPLE = (148,0,211)
-ORANGE = (255,106,2)
-INDIGO = (75,0,130)
-VIOLET = (238,130,238)
-PINK = (231,84,128)
-BROWN = (102,51,0)
-CYAN = 0,173,238
-SHAPE_COLOUR = ORANGE
-CLICK_BUTTON_COLOUR = PINK
-SIDE_SHAPE_COLOUR = ORANGE
+    def set_grid(self,grid):
+        self.grid = copy.deepcopy(grid)
 
-### Set up pygame:
+    @classmethod
+    def solve(self, grid):
+        for y in range(9):
+            for x in range(9):
+                if grid[y][x] == 0:
+                    for n in range(1,10):
+                        if isPossbile(grid, n,x,y):
+                            grid[y][x] = n
+                            yield from self.solve(grid)
+                            grid[y][x] = 0
+                    return
+        yield grid
 
-pg.mixer.pre_init()
-pg.init()
-pg.font.init()
-scr = pg.display.set_mode((GRID_W*CUBE_WIDTH, GRID_H*CUBE_WIDTH))
-pg.display.set_caption(TITLE)
-scr.fill(BLACK)
-pg.display.flip()
+    @classmethod
+    def check_unique(self, grid):
+        ### check if grid has one unique solution
+        grid = copy.deepcopy(grid)
+        rs = self.solve(grid)
+        times = 0
+        for _ in range(2):
+            if times > 1:
+                return False
+            try:
+                next(rs)
+            except StopIteration:
+                if times == 1:
+                    return True
+            times += 1
 
-### Set up the board:
+        return False
 
-PuzzleRec = MyRect(func=None, colour=BLUE, line_colour=WHITE)
-PlayingRec = MyRect(func=[assign_num], colour=BLACK, line_colour=WHITE)
+    @classmethod
+    def print(self, grid):
+        for line in grid:
+            for num in line:
+                if num == 0:
+                    print(".", end="  ")
+                else:
+                    print(num, end="  ")
+            print()
 
-sodoku_board = SodokuBoard(scr, x=0, y=0, rect=PlayingRec, width=GRID_W, height=GRID_H,
-                     cube_width= CUBE_WIDTH, cube_height=CUBE_WIDTH, border=False)
-
-## set rec for the puzzle RECT, so that they are different:
-# for y in range(GRID_H):
-#         for x in range(GRID_W):
-#                 if grid[y][x] != 0:
-#                         print(f"x = {x}; y = {y}")
-#                         sodoku_board.assign_rect_to_array(sodoku_board.array,x,y,PuzzleRec)
-
-
-### SET UP BEFORE GAME-LOOP:
-display_ob = Display(scr)
-num_font = pg.font.SysFont("andalemono", 30)
-running = True
-while running:
-        ######## set-up timing:
-
-        ######## get user-input:
-        events = pg.event.get()
-        for e in events:
-                if e.type == pg.QUIT:
-                        running = False
-                if e.type == pg.MOUSEBUTTONDOWN:
-                        sodoku_board.click(e.pos)
-
-        ####### update game states:
-
-        ####### draw & render:
-        sodoku_board.draw()
-
-        pg.display.flip()
+    @classmethod
+    def generate_random_puzzle(self):
+        def fill_random(grid, n=30):
+            ### n is the number of random numbers to be filled
+            ### check validity as you fill
+            pass
+        grid = generate_empty_grid(9,9)
+        fill_random(grid)
+        if not self.check_unique(grid):
+            grid = self.generate_random_puzzle()
+        return grid
 
 
 

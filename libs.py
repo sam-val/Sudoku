@@ -5,16 +5,18 @@ from collections import namedtuple
 
 class MyRect:
     def __init__(self,pic = None, func = None, border_colour = None,
-                 click_colour = None, line_colour = None, colour = None, rect=None ):
+                 active_colour = None, line_colour = None, colour = None, rect=None,
+                 active = False ):
         self.func = func
         self.pic = pic
-        self.click = False
+        self.active = active
         self.tick = 0
         self.border_colour = border_colour
-        self.click_colour = click_colour
+        self.active_colour = active_colour
         self.line_colour = line_colour
         self.colour = colour
         self.rect = rect
+        self.active = active
 
 
 class Board:
@@ -38,8 +40,8 @@ class Board:
                 px = self.posx + x*self.cube_w
                 py = self.posy + y*self.cube_h
                 border_colour = self.array[x +y * self.w].border_colour
-                click = self.array[x+y*self.w].click
-                # colour = self.array[x +y * self.w].click_colour if click else self.array[x+y*self.w].colour
+                active = self.array[x+y*self.w].active
+                # colour = self.array[x +y * self.w].active_colour if active else self.array[x+y*self.w].colour
                 colour = self.array[x+y*self.w].colour
 
                 pg.draw.rect(self.screen, colour, self.array[x+y*self.w].rect)
@@ -66,13 +68,15 @@ class Board:
         for x in range(self.w):
             for y in range(self.h):
                 Rect = self.array[x+y*self.w]
+                Rect.x = x
+                Rect.y = y
                 if Rect.rect.collidepoint(pos):
-                    Rect.click = not Rect.click
+                    Rect.active = not Rect.active
                     if not self.checkIfBorder(x,y):
                         if Rect.func is not None:
                             for i,f in enumerate(Rect.func):
-                                Rect.func[i](currentRect=Rect, currentBoard=self,pos_x=x,pos_y=y)
-                    return
+                                Rect.func[i](rect=Rect, board=self)
+                    return Rect
 
     def checkIfBorder(self, x, y):
         if self.border:
