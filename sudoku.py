@@ -111,11 +111,18 @@ class Solver:
     def generate_puzzle(self):
         board = Solver.generate_filled_board()
         times = 0
-        ### remove a random num
+        # remove a random num
         priv_x = None
         priv_y = None
         first = True
+        iterations=0
+        endless = False
         while times < 51:
+            print(iterations:=iterations+1)
+            if iterations > 200:
+                Solver.print(board)
+                endless = True
+                break
             if first:
                 x = random.randint(0,8)
                 y = random.randint(0,8)
@@ -126,7 +133,7 @@ class Solver:
             spot = board[y][x]
             if spot != 0:
                 board[y][x] = 0
-                ### solve the new board and check for solutions
+                # solve the new board and check for solutions
                 if self.check_unique(board):
                     times += 1
                     if first:
@@ -138,6 +145,8 @@ class Solver:
             else:
                 continue
 
+        if endless:
+            board = self.generate_puzzle()
         return board
 
 
