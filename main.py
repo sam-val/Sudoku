@@ -1,9 +1,11 @@
 import random
 import os
+import time
 import copy
 import pygame as pg
 from libs import Board, MyRect, Display
-from sudoku import Solver, isPossbile
+from sudoku import Solver, isPossbile, generate_empty_grid
+import requests
 
 class SodokuBoard(Board):
         def draw(self):
@@ -102,13 +104,23 @@ def solve_display():
                 display_grid = copy.deepcopy(original_grid)
 
 def new_puzzle(*args, **kwargs):
-    print("generating...")
+    ### USING API CALL
+    grid = generate_empty_grid(9, 9)
+    params = {"size": 9, "level": 2}
+    url = "http://www.cs.utep.edu/cheon/ws/sudoku/new"
+    r = requests.get(url, params=params)
+    data = r.json()
+    for i in data['squares']:
+        x, y, n = i['x'], i['y'], i['value']
+        grid[y][x] = n
+    global display_grid
+    display_grid = grid
 
 
 ### CONSTANTS
 TITLE = "SODOKU"
-GRID_W = len(display_grid[0])
-GRID_H = len(display_grid)
+GRID_W = 9
+GRID_H = 9
 CUBE_WIDTH = 75
 
 ### COLOURS:
@@ -138,7 +150,7 @@ SIDE_SHAPE_COLOUR = ORANGE
 pg.mixer.pre_init()
 pg.init()
 pg.font.init()
-scr = pg.display.set_mode((GRID_W*CUBE_WIDTH, GRID_H*CUBE_WIDTH))
+scr = pg.display.set_mode((GRID_W*CUBE_WIDTH, (GRID_H+1)*CUBE_WIDTH))
 pg.display.set_caption(TITLE)
 scr.fill(BLACK)
 pg.display.flip()
@@ -168,8 +180,11 @@ active_rect = None
 temp_grid = None
 grid_results = None
 original_grid = None
+generate_locked = False
+generate_time = 0
 while running:
         ######## set-up timing:
+
 
         ####### update game states:
 
@@ -190,7 +205,6 @@ while running:
                         newPuzzleButton.click(e.pos)
                     else:
                         solve_display()
-
 
         ####### draw & render:
         sodoku_board.draw()

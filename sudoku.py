@@ -1,4 +1,5 @@
 import copy
+import random
 
 def generate_empty_grid(width, height):
     g = []
@@ -7,7 +8,6 @@ def generate_empty_grid(width, height):
         for x in range(width):
             g[y].append(0)
     return g
-
 
 def isPossbile(grid, n, x, y):
     # check horozontally aka. x:
@@ -53,9 +53,9 @@ class Solver:
         yield grid
 
     @classmethod
-    def check_unique(self, grid):
+    def check_unique(self, board):
         ### check if grid has one unique solution
-        grid = copy.deepcopy(grid)
+        grid = copy.deepcopy(board)
         rs = self.solve(grid)
         times = 0
         for _ in range(2):
@@ -63,10 +63,10 @@ class Solver:
                 return False
             try:
                 next(rs)
+                times += 1
             except StopIteration:
                 if times == 1:
                     return True
-            times += 1
 
         return False
 
@@ -81,16 +81,66 @@ class Solver:
             print()
 
     @classmethod
-    def generate_random_puzzle(self):
-        def fill_random(grid, n=30):
-            ### n is the number of random numbers to be filled
-            ### check validity as you fill
-            pass
+    def generate_filled_board(cls):
+        def fill_random(grid):
+            ### fill a full square
+            for x in range(3):
+                for y in range(3):
+                    while True:
+                        ran_num = random.randint(1, 9)
+                        if isPossbile(grid=grid,x=x,y=y,n=ran_num):
+                            grid[y][x] = ran_num
+                            break
+
         grid = generate_empty_grid(9,9)
         fill_random(grid)
-        if not self.check_unique(grid):
-            grid = self.generate_random_puzzle()
-        return grid
+        # cls.print(grid)
+        results = cls.solve(grid)
+        return next(results)
+
+    @classmethod
+    def find_opposite_square(cls, x,y):
+        x = x // 3
+        y = y // 3
+        opp_x0 = abs(x-2) * 3
+        opp_y0 = abs(y-2) * 3
+
+        return opp_x0, opp_y0
+
+    @classmethod
+    def generate_puzzle(self):
+        board = Solver.generate_filled_board()
+        times = 0
+        ### remove a random num
+        priv_x = None
+        priv_y = None
+        first = True
+        while times < 51:
+            if first:
+                x = random.randint(0,8)
+                y = random.randint(0,8)
+            else:
+                x0, y0 = Solver.find_opposite_square(priv_x, priv_y)
+                x = x0 + random.randint(0,2)
+                y = y0 + random.randint(0,2)
+            spot = board[y][x]
+            if spot != 0:
+                board[y][x] = 0
+                ### solve the new board and check for solutions
+                if self.check_unique(board):
+                    times += 1
+                    if first:
+                        priv_x = x
+                        priv_y = y
+                    first = not first
+                else:
+                    board[y][x] = spot
+            else:
+                continue
+
+        return board
+
+
 
 
 
