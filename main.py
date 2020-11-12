@@ -23,6 +23,26 @@ class SodokuBoard(Board):
                                                         text=text,centeredX=True,centeredY=True,
                                                         colour=WHITE,bg=None,font=num_font)
 
+            for i in range(4):
+                horizontal_y = i * CUBE_WIDTH * 3 + (newPuzzleButton.h * CUBE_WIDTH)
+                vertical_x = i*CUBE_WIDTH*3
+                vertical_width = 3
+                horizontal_width = 3
+                if i == 0:
+                    vertical_x += 1
+                    horizontal_y += 1
+                elif i == 3:
+                    vertical_x -= 2
+                    horizontal_y -= 2
+
+                ### draw 4 sudoku lines vertically:
+                pg.draw.line(scr,RED,start_pos=(vertical_x, CUBE_WIDTH*(newPuzzleButton.h)),
+                             end_pos=(vertical_x,CUBE_WIDTH*(GRID_H+newPuzzleButton.h)),width=vertical_width)
+                ### horizontally
+                pg.draw.line(scr, RED, start_pos=(0, horizontal_y),
+                             end_pos=(CUBE_WIDTH * (GRID_W), horizontal_y), width=horizontal_width)
+
+
 display_grid = [[5, 3, 0, 0, 7, 0, 0, 0, 0],
                 [6, 0, 0, 1, 9, 5, 0, 0, 0],
                 [0, 9, 8, 0, 0, 0, 0, 6, 0],
