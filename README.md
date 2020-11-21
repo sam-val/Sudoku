@@ -2,6 +2,7 @@
 ---HOW TO ---
 
 0. Install Python 3
+
 0.5. Update pip to the lastest version:
 > pip3 install --upgrade pip
 1. Install the required modules using the lastest pip, then run this at the root folder /Sudoku:
