@@ -118,7 +118,7 @@ class Solver:
         iterations=0
         endless = False
         while times < 51:
-            print(iterations:=iterations+1)
+            iterations += 1
             if iterations > 200:
                 Solver.print(board)
                 endless = True

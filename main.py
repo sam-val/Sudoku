@@ -1,11 +1,7 @@
-import random
-import os
-import time
 import copy
 import pygame as pg
 from libs import Board, MyRect, Display
 from sudoku import Solver, isPossbile, generate_empty_grid
-import requests
 
 class SodokuBoard(Board):
         def draw(self):
@@ -100,7 +96,6 @@ def assign_num(rect):
 def solve_display():
     global temp_grid, grid_results, display_grid, original_grid
     if temp_grid != display_grid:
-        print('running.........')
         original_grid = copy.deepcopy(display_grid)
         temp_grid = original_grid
         solver.set_grid(display_grid)
@@ -111,28 +106,27 @@ def solve_display():
             print('nothing to do')
         else:
             try:
-                print("try...")
                 rs = next(grid_results)
                 display_grid = copy.deepcopy(rs)
                 temp_grid = copy.deepcopy(display_grid)
                 # Solver.print(test)
                 # original_grid = test
-                print("YES! RESULT")
-                print(display_grid)
             except StopIteration:
-                print("no more results, back")
+                # print("no more results, back")
                 display_grid = copy.deepcopy(original_grid)
 
 def new_puzzle(*args, **kwargs):
-    ### USING API CALL
-    grid = generate_empty_grid(9, 9)
-    params = {"size": 9, "level": 2}
-    url = "http://www.cs.utep.edu/cheon/ws/sudoku/new"
-    r = requests.get(url, params=params)
-    data = r.json()
-    for i in data['squares']:
-        x, y, n = i['x'], i['y'], i['value']
-        grid[y][x] = n
+    # ### USING API CALL
+    # grid = generate_empty_grid(9, 9)
+    # params = {"size": 9, "level": 2}
+    # url = "http://www.cs.utep.edu/cheon/ws/sudoku/new"
+    # r = requests.get(url, params=params)
+    # data = r.json()
+    # for i in data['squares']:
+    #     x, y, n = i['x'], i['y'], i['value']
+    #     grid[y][x] = n
+    grid = Solver.generate_puzzle()
+
     global display_grid
     display_grid = grid
 
